@@ -100,3 +100,58 @@ class Table:
     def __str__(self):
         return self.table_name + ':' + str(self.table)
 
+    def insert_row(self, dict):
+        '''
+        This method inserts a dictionary, dict, into a Table object, effectively adding a row to the Table.
+        '''
+        self.table.append(dict)
+
+    def update_row(self, primary_attribute, primary_attribute_value, update_attribute, update_value):
+        '''
+        This method updates the current value of update_attribute to update_value
+        For example, my_table.update_row('Film', 'A Serious Man', 'Year', '2022') will change the 'Year' attribute for the 'Film'
+        'A Serious Man' from 2009 to 2022
+        '''
+        for i in self.table:
+            if primary_attribute_value == i[f'{primary_attribute}']:
+                i[f'{update_attribute}'] = update_value
+
+
+movies = []
+with open(os.path.join(__location__, 'movies.csv')) as f:
+    rows = csv.DictReader(f)
+    for r in rows:
+        movies.append(dict(r))
+
+my_db = DB()
+mobie_table = Table('movies', movies)
+my_db.insert(mobie_table)
+mv_table = my_db.search('movies')
+
+all_comedy = mv_table.filter(lambda x: x['Genre'] == "Comedy")
+print('Find the average value of ‘Worldwide Gross’ for ‘Comedy’ movies:')
+print(f"{all_comedy.aggregate(lambda x: sum(x) / len(x), 'Worldwide Gross'):.2f}")
+
+all_drama = mv_table.filter(lambda x: x['Genre'] == "Drama")
+print("Find the minimum ‘Audience score %’ for ‘Drama’ movies")
+print(f"{all_drama.aggregate(lambda x: sum(x) / len(x), 'Audience score %'):.2f}")
+
+print('Count the number of ‘Fantasy’ movie before invoking any of the above two methods')
+print(len(mv_table.filter(lambda x: x['Genre'] == "Fantasy").table))
+
+dict = {}
+dict['Film'] = 'The Shape of Water'
+dict['Genre'] = 'Fantasy'
+dict['Lead Studio'] = 'Fox'
+dict['Audience score %'] = '72'
+dict['Profitability'] = '9.765'
+dict['Rotten Tomatoes %'] = '92'
+dict['Worldwide Gross'] = '195.3'
+dict['Year'] = '2017'
+
+print('And count the number of ‘Fantasy’ movie again')
+mv_table.insert_row(dict)
+print(len(mv_table.filter(lambda x: x['Genre'] == "Fantasy").table))
+
+
+mv_table.update_row('Year', 'A Serious Man', "Film", '2022')
